@@ -1,0 +1,8 @@
+{
+  "name": "wrf-modal",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "a65e4c9a"
+}
