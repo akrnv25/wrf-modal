@@ -14,7 +14,7 @@ import { WrfModalsStackComponent } from './components/wrf-modals-stack/wrf-modal
     CommonModule
   ],
   exports: [
-    WrfModalComponent
+    WrfModalsStackComponent
   ],
   providers: [
     WrfModalControllerService
