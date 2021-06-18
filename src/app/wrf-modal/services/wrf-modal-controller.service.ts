@@ -1,17 +1,17 @@
-import { Component, Injectable, Type } from '@angular/core';
-import { Subject } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { Injectable, Type } from '@angular/core';
+import { ReplaySubject, Subject } from 'rxjs';
+import { filter, first, map } from 'rxjs/operators';
 
-interface Modal<D = any> {
+export interface Modal<D = any> {
   present: () => void;
   onDidDismiss: () => Promise<D>;
 }
 
-interface ModalConfig {
-  component: Type<Component>;
+export interface ModalConfig {
+  component: Type<any>;
 }
 
-interface ModalToCreate {
+export interface ModalToCreate {
   config: ModalConfig;
   id: string;
 }
@@ -25,7 +25,7 @@ interface CreatedModal {
 export class WrfModalControllerService {
 
   modalToCreate: Subject<ModalToCreate> = new Subject();
-  createdModal: Subject<CreatedModal> = new Subject();
+  createdModal: ReplaySubject<CreatedModal> = new ReplaySubject();
 
   constructor() {
   }
@@ -34,9 +34,11 @@ export class WrfModalControllerService {
     const id = `${Date.now()}`;
     this.modalToCreate.next({ config, id });
     return this.createdModal
+      .asObservable()
       .pipe(
         filter(createdModal => createdModal.id === id),
-        map(createdModal => createdModal.modal)
+        map(createdModal => createdModal.modal),
+        first()
       )
       .toPromise();
   }

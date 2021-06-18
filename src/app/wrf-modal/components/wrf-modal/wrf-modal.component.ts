@@ -33,16 +33,16 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      this.calcBreakpoints();
-      this.showBackdrop();
-      this.showContainer();
-    }, 1000);
   }
 
   ngAfterViewInit(): void {
     this.initElements();
     this.useContainerSwipe();
+  }
+
+  present(): void {
+    this.calcBreakpoints();
+    this.showElements();
   }
 
   private initElements(): void {
@@ -107,11 +107,9 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
     };
   }
 
-  private showBackdrop(): void {
+  private showElements(): void {
+    this.renderer2.setStyle(this.modal, 'z-index', '1000');
     this.renderer2.setStyle(this.backdrop, 'display', 'block');
-  }
-
-  private showContainer(): void {
     this.renderer2.setStyle(this.container, 'display', 'block');
     this.pushContainer(this.breakpoints.partialSize);
   }
