@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { Modal, WrfModalControllerService } from '../wrf-modal/services/wrf-modal-controller.service';
+import { WrfModalControllerService } from '../wrf-modal/services/wrf-modal-controller.service';
 import { Tab1ModalComponent } from './components/tab1-modal/tab1-modal.component';
 
 @Component({
@@ -10,26 +10,29 @@ import { Tab1ModalComponent } from './components/tab1-modal/tab1-modal.component
 })
 export class Tab1Page {
 
-  private modal: Modal;
-
   constructor(
     private modalControllerService: WrfModalControllerService
   ) {
   }
 
-  async onPresentClick(): Promise<void> {
-    this.modal = await this.modalControllerService.create({
+  onPresent(): void {
+    this.modalControllerService.present({
       component: Tab1ModalComponent,
       componentProps: {
         prop1: 'aaa',
         prop2: 25,
         prop3: [25, 25, 25],
         prop4: { name: 'Alex', lastName: 'Korenev' }
+      },
+      onDidPresent: () => {
+        console.log('onDidPresent');
+      },
+      onWillDismiss: () => {
+        console.log('onWillDismiss');
+      },
+      onDidDismiss: () => {
+        console.log('onDidDismiss');
       }
-    });
-    this.modal.present();
-    this.modal.onDismiss().then(res => {
-      console.log(res);
     });
   }
 

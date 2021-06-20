@@ -8,9 +8,9 @@ import {
   ViewContainerRef
 } from '@angular/core';
 import { Subject } from 'rxjs';
-import { filter, map, take, takeUntil, tap } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 
-import { Modal, ModalToCreate, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
+import { ModalConfig, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
 import { WrfModalComponent } from '../wrf-modal/wrf-modal.component';
 
 @Component({
@@ -20,11 +20,11 @@ import { WrfModalComponent } from '../wrf-modal/wrf-modal.component';
 })
 export class WrfModalStackComponent implements OnInit, OnDestroy {
 
-  modals: ModalToCreate[] = [];
+  configs: ModalConfig[] = [];
   private destroy$: Subject<void> = new Subject();
 
   @ViewChild(WrfModalComponent) private modalComponent: WrfModalComponent;
-  @ViewChild('modalContainer', { read: ViewContainerRef }) private modalContainerRef: ViewContainerRef;
+  @ViewChild('modalContent', { read: ViewContainerRef }) private modalContent: ViewContainerRef;
 
   constructor(
     private modalControllerService: WrfModalControllerService,
@@ -34,52 +34,21 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.modalControllerService.modalToCreate
+    this.modalControllerService.toPresent$
       .asObservable()
       .pipe(
-        filter(({ config }: ModalToCreate) => !!config.component),
+        filter((config: ModalConfig) => !!config.component),
         takeUntil(this.destroy$)
       )
-      .subscribe((modalToCreate: ModalToCreate) => {
-        this.modals.push(modalToCreate);
+      .subscribe((config: ModalConfig) => {
+        this.configs.push(config);
         this.changeDetectorRef.detectChanges();
-        const { config, id } = modalToCreate;
-        this.modalContainerRef.clear();
-        if (config.component) {
-          const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
-          const componentRef = this.modalContainerRef.createComponent(componentFactory);
-          if (config.componentProps) {
-            const keys = Object.keys(config.componentProps);
-            keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
-          }
-          const modal: Modal = {
-            present: this.modalComponent.present.bind(this.modalComponent),
-            onDismiss: () => {
-              return componentRef.instance.dismiss
-                .asObservable()
-                .pipe(
-                  take(1),
-                  map((res) => {
-                    console.log(res, 'eeee');
-                    return res;
-                  }),
-                  tap(() => this.modals = [])
-                )
-                .toPromise();
-              // return this.modalComponent.dismiss
-              //   .asObservable()
-              //   .pipe(
-              //     take(1),
-              //     map((res) => {
-              //       console.log(res, 'eeee');
-              //       return res;
-              //     }),
-              //     tap(() => this.modals = [])
-              //   )
-              //   .toPromise();
-            }
-          };
-          this.modalControllerService.createdModal.next({ modal, id });
+        this.modalContent.clear();
+        const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
+        const componentRef = this.modalContent.createComponent(componentFactory);
+        if (config.componentProps) {
+          const keys = Object.keys(config.componentProps);
+          keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
         }
       });
   }

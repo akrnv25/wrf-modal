@@ -1,5 +1,3 @@
-<app-wrf-modal
-  *ngIf="modals.length"
->
-  <ng-container #modalContainer></ng-container>
+<app-wrf-modal *ngIf="configs.length" [config]="configs[0]">
+  <ng-container #modalContent></ng-container>
 </app-wrf-modal>

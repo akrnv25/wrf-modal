@@ -1,47 +1,41 @@
 import { Injectable, Type } from '@angular/core';
-import { ReplaySubject, Subject } from 'rxjs';
-import { filter, map, take } from 'rxjs/operators';
-
-export interface Modal<D = any> {
-  present: () => void;
-  onDismiss: () => Promise<D>;
-}
+import { Subject } from 'rxjs';
 
 export interface ModalConfig {
   component: Type<any>;
   componentProps?: { [key: string]: any };
-}
-
-export interface ModalToCreate {
-  config: ModalConfig;
-  id: string;
-}
-
-interface CreatedModal {
-  modal: Modal;
-  id: string;
+  onDidPresent?: () => void;
+  onWillDismiss?: () => void;
+  onDidDismiss?: () => void;
+  id?: string;
 }
 
 @Injectable()
 export class WrfModalControllerService {
 
-  modalToCreate: Subject<ModalToCreate> = new Subject();
-  createdModal: ReplaySubject<CreatedModal> = new ReplaySubject();
+  toPresent$: Subject<ModalConfig> = new Subject();
+  toClose$: Subject<string> = new Subject();
+
+  private configs: ModalConfig[] = [];
 
   constructor() {
   }
 
-  create(config: ModalConfig): Promise<Modal> {
+  present(config: ModalConfig): string {
     const id = `${Date.now()}`;
-    this.modalToCreate.next({ config, id });
-    return this.createdModal
-      .asObservable()
-      .pipe(
-        filter(createdModal => createdModal.id === id),
-        take(1),
-        map(createdModal => createdModal.modal)
-      )
-      .toPromise();
+    this.toPresent$.next({ ...config, id });
+    return id;
+  }
+
+  close(id: string): void {
+    const configExists = this.configs.some(config => config.id === id);
+    if (configExists) {
+      this.toClose$.next(id);
+    }
+  }
+
+  closeAll(): void {
+    this.configs.forEach(config => this.toClose$.next(config.id));
   }
 
 }

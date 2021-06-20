@@ -1,16 +1,9 @@
-import {
-  AfterViewInit,
-  Component, ContentChild,
-  ElementRef,
-  EventEmitter, Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  Renderer2, ViewChild
-} from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { Gesture, GestureController, GestureDetail } from '@ionic/angular';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+
+import { ModalConfig } from '../../services/wrf-modal-controller.service';
 
 enum SwipeDirection {
   UP,
@@ -35,8 +28,7 @@ export class ModalComponent {
 })
 export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  @Input() component: ModalComponent;
-  @Output() dismiss: EventEmitter<any> = new EventEmitter();
+  @Input() config: ModalConfig;
 
   private breakpoints: ModalBreakpoints;
   private modal: HTMLElement;
@@ -56,19 +48,15 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initElements();
-    this.handleBackdropClick();
     this.handleContainerSwipe();
+    this.handleBackdropClick();
+    this.calcBreakpoints();
+    this.showElements();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    console.log('modal component destroyed');
-  }
-
-  present(): void {
-    this.calcBreakpoints();
-    this.showElements();
   }
 
   private initElements(): void {
@@ -175,8 +163,7 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async onDismiss(): Promise<void> {
     await this.hideElements();
-    console.log('dismiss');
-    this.dismiss.emit(null);
+    // this.dismiss.emit(null);
   }
 
 }
