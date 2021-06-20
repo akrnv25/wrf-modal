@@ -1,5 +1,16 @@
-import { AfterViewInit, Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
+import {
+  AfterViewInit,
+  Component, ContentChild,
+  ElementRef,
+  EventEmitter, Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  Renderer2, ViewChild
+} from '@angular/core';
 import { Gesture, GestureController, GestureDetail } from '@ionic/angular';
+import { fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 enum SwipeDirection {
   UP,
@@ -13,17 +24,25 @@ interface ModalBreakpoints {
   closed: number;
 }
 
+export class ModalComponent {
+  dismiss: EventEmitter<any>;
+}
+
 @Component({
   selector: 'app-wrf-modal',
   templateUrl: './wrf-modal.component.html',
   styleUrls: ['./wrf-modal.component.scss']
 })
-export class WrfModalComponent implements OnInit, AfterViewInit {
+export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  @Input() component: ModalComponent;
+  @Output() dismiss: EventEmitter<any> = new EventEmitter();
 
   private breakpoints: ModalBreakpoints;
   private modal: HTMLElement;
   private backdrop: HTMLElement;
   private container: HTMLElement;
+  private destroy$: Subject<void> = new Subject();
 
   constructor(
     private gestureController: GestureController,
@@ -37,7 +56,14 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initElements();
-    this.useContainerSwipe();
+    this.handleBackdropClick();
+    this.handleContainerSwipe();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    console.log('modal component destroyed');
   }
 
   present(): void {
@@ -51,7 +77,7 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
     this.container = this.modal.querySelector('.wrf-modal__container');
   }
 
-  private useContainerSwipe(): void {
+  private handleContainerSwipe(): void {
     let startTop: number;
     let direction: SwipeDirection;
     let prevTop: number;
@@ -81,20 +107,33 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
         prevTop = checkedTop;
       },
       onEnd: () => {
-        let top: number;
         switch (direction) {
           case SwipeDirection.UP:
-            top = this.breakpoints.fullSize;
+            this.pushContainer(this.breakpoints.fullSize);
             break;
           case SwipeDirection.DOWN:
             const { y } = this.container.getBoundingClientRect();
-            top = this.breakpoints.needClose < y ? this.breakpoints.closed : this.breakpoints.partialSize;
+            const isClosing = this.breakpoints.needClose < y;
+            if (isClosing) {
+              this.pushContainer(this.breakpoints.closed).then(() => {
+                this.onDismiss();
+              });
+            } else {
+              this.pushContainer(this.breakpoints.partialSize);
+            }
             break;
         }
-        this.pushContainer(top);
       }
     });
     gesture.enable(true);
+  }
+
+  private handleBackdropClick(): void {
+    fromEvent(this.backdrop, 'click')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.onDismiss();
+      });
   }
 
   private calcBreakpoints(): void {
@@ -114,11 +153,30 @@ export class WrfModalComponent implements OnInit, AfterViewInit {
     this.pushContainer(this.breakpoints.partialSize);
   }
 
-  private pushContainer(top: number): void {
-    this.renderer2.setStyle(this.container, 'transition', '300ms ease-in');
-    setTimeout(() => {
-      this.renderer2.setStyle(this.container, 'top', `${top}px`);
-    }, 0);
+  private async hideElements(): Promise<void> {
+    await this.pushContainer(this.breakpoints.closed);
+    this.renderer2.setStyle(this.modal, 'z-index', '-1000');
+    this.renderer2.setStyle(this.backdrop, 'display', 'none');
+    this.renderer2.setStyle(this.container, 'display', 'none');
+  }
+
+  private pushContainer(top: number): Promise<void> {
+    const animationDuration = 300;
+    return new Promise((resolve, reject) => {
+      this.renderer2.setStyle(this.container, 'transition', `${animationDuration}ms ease-in`);
+      setTimeout(() => {
+        this.renderer2.setStyle(this.container, 'top', `${top}px`);
+      }, 0);
+      setTimeout(() => {
+        resolve();
+      }, animationDuration);
+    });
+  }
+
+  private async onDismiss(): Promise<void> {
+    await this.hideElements();
+    console.log('dismiss');
+    this.dismiss.emit(null);
   }
 
 }

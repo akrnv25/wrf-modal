@@ -10,16 +10,27 @@ import { Tab1ModalComponent } from './components/tab1-modal/tab1-modal.component
 })
 export class Tab1Page {
 
+  private modal: Modal;
+
   constructor(
     private modalControllerService: WrfModalControllerService
   ) {
   }
 
-  async openWrfModal(): Promise<void> {
-    const modal: Modal = await this.modalControllerService.create({
-      component: Tab1ModalComponent
+  async onPresentClick(): Promise<void> {
+    this.modal = await this.modalControllerService.create({
+      component: Tab1ModalComponent,
+      componentProps: {
+        prop1: 'aaa',
+        prop2: 25,
+        prop3: [25, 25, 25],
+        prop4: { name: 'Alex', lastName: 'Korenev' }
+      }
     });
-    modal.present();
+    this.modal.present();
+    this.modal.onDismiss().then(res => {
+      console.log(res);
+    });
   }
 
 }

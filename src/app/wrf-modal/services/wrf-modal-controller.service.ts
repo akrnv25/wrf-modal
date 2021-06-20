@@ -1,14 +1,15 @@
 import { Injectable, Type } from '@angular/core';
 import { ReplaySubject, Subject } from 'rxjs';
-import { filter, first, map } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 
 export interface Modal<D = any> {
   present: () => void;
-  onDidDismiss: () => Promise<D>;
+  onDismiss: () => Promise<D>;
 }
 
 export interface ModalConfig {
   component: Type<any>;
+  componentProps?: { [key: string]: any };
 }
 
 export interface ModalToCreate {
@@ -37,8 +38,8 @@ export class WrfModalControllerService {
       .asObservable()
       .pipe(
         filter(createdModal => createdModal.id === id),
-        map(createdModal => createdModal.modal),
-        first()
+        take(1),
+        map(createdModal => createdModal.modal)
       )
       .toPromise();
   }

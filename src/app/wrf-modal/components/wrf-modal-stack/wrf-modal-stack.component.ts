@@ -8,7 +8,7 @@ import {
   ViewContainerRef
 } from '@angular/core';
 import { Subject } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { filter, map, take, takeUntil, tap } from 'rxjs/operators';
 
 import { Modal, ModalToCreate, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
 import { WrfModalComponent } from '../wrf-modal/wrf-modal.component';
@@ -48,9 +48,36 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
         if (config.component) {
           const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
           const componentRef = this.modalContainerRef.createComponent(componentFactory);
+          if (config.componentProps) {
+            const keys = Object.keys(config.componentProps);
+            keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
+          }
           const modal: Modal = {
             present: this.modalComponent.present.bind(this.modalComponent),
-            onDidDismiss: null
+            onDismiss: () => {
+              return componentRef.instance.dismiss
+                .asObservable()
+                .pipe(
+                  take(1),
+                  map((res) => {
+                    console.log(res, 'eeee');
+                    return res;
+                  }),
+                  tap(() => this.modals = [])
+                )
+                .toPromise();
+              // return this.modalComponent.dismiss
+              //   .asObservable()
+              //   .pipe(
+              //     take(1),
+              //     map((res) => {
+              //       console.log(res, 'eeee');
+              //       return res;
+              //     }),
+              //     tap(() => this.modals = [])
+              //   )
+              //   .toPromise();
+            }
           };
           this.modalControllerService.createdModal.next({ modal, id });
         }
