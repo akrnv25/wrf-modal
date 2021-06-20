@@ -4,6 +4,7 @@ import { Subject } from 'rxjs';
 export interface ModalConfig {
   component: Type<any>;
   componentProps?: { [key: string]: any };
+  onWillPresent?: () => void;
   onDidPresent?: () => void;
   onWillDismiss?: () => void;
   onDidDismiss?: () => void;

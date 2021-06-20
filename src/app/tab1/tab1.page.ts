@@ -24,6 +24,9 @@ export class Tab1Page {
         prop3: [25, 25, 25],
         prop4: { name: 'Alex', lastName: 'Korenev' }
       },
+      onWillPresent: () => {
+        console.log('onWillPresent');
+      },
       onDidPresent: () => {
         console.log('onDidPresent');
       },

@@ -58,4 +58,20 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  onWillPresent(): void {
+    this.configs[0].onWillPresent();
+  }
+
+  onDidPresent(): void {
+    this.configs[0].onDidPresent();
+  }
+
+  onDidDismiss(): void {
+    this.configs[0].onDidDismiss();
+  }
+
+  onWillDismiss(): void {
+    this.configs[0].onWillDismiss();
+  }
+
 }

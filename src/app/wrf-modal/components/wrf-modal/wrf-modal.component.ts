@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, Renderer2 } from '@angular/core';
 import { Gesture, GestureController, GestureDetail } from '@ionic/angular';
 import { fromEvent, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -17,18 +17,18 @@ interface ModalBreakpoints {
   closed: number;
 }
 
-export class ModalComponent {
-  dismiss: EventEmitter<any>;
-}
-
 @Component({
   selector: 'app-wrf-modal',
   templateUrl: './wrf-modal.component.html',
   styleUrls: ['./wrf-modal.component.scss']
 })
-export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
+export class WrfModalComponent implements AfterViewInit, OnDestroy {
 
   @Input() config: ModalConfig;
+  @Output() willPresent: EventEmitter<void> = new EventEmitter();
+  @Output() didPresent: EventEmitter<void> = new EventEmitter();
+  @Output() willDismiss: EventEmitter<void> = new EventEmitter();
+  @Output() didDismiss: EventEmitter<void> = new EventEmitter();
 
   private breakpoints: ModalBreakpoints;
   private modal: HTMLElement;
@@ -41,9 +41,6 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
     private renderer2: Renderer2,
     private elementRef: ElementRef
   ) {
-  }
-
-  ngOnInit(): void {
   }
 
   ngAfterViewInit(): void {
@@ -104,7 +101,7 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
             const isClosing = this.breakpoints.needClose < y;
             if (isClosing) {
               this.pushContainer(this.breakpoints.closed).then(() => {
-                this.onDismiss();
+                this.hideElements();
               });
             } else {
               this.pushContainer(this.breakpoints.partialSize);
@@ -120,7 +117,7 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
     fromEvent(this.backdrop, 'click')
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.onDismiss();
+        this.hideElements();
       });
   }
 
@@ -132,20 +129,6 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
       needClose: Math.round(height * 0.75),
       closed: height
     };
-  }
-
-  private showElements(): void {
-    this.renderer2.setStyle(this.modal, 'z-index', '1000');
-    this.renderer2.setStyle(this.backdrop, 'display', 'block');
-    this.renderer2.setStyle(this.container, 'display', 'block');
-    this.pushContainer(this.breakpoints.partialSize);
-  }
-
-  private async hideElements(): Promise<void> {
-    await this.pushContainer(this.breakpoints.closed);
-    this.renderer2.setStyle(this.modal, 'z-index', '-1000');
-    this.renderer2.setStyle(this.backdrop, 'display', 'none');
-    this.renderer2.setStyle(this.container, 'display', 'none');
   }
 
   private pushContainer(top: number): Promise<void> {
@@ -161,9 +144,24 @@ export class WrfModalComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private async onDismiss(): Promise<void> {
-    await this.hideElements();
-    // this.dismiss.emit(null);
+  private showElements(): void {
+    this.willPresent.emit();
+    this.renderer2.setStyle(this.modal, 'z-index', '1000');
+    this.renderer2.setStyle(this.backdrop, 'display', 'block');
+    this.renderer2.setStyle(this.container, 'display', 'block');
+    this.pushContainer(this.breakpoints.partialSize)
+      .then(() => this.didPresent.emit());
+  }
+
+  private hideElements(): void {
+    this.willDismiss.emit();
+    this.pushContainer(this.breakpoints.closed)
+      .then(() => {
+        this.renderer2.setStyle(this.modal, 'z-index', '-1000');
+        this.renderer2.setStyle(this.backdrop, 'display', 'none');
+        this.renderer2.setStyle(this.container, 'display', 'none');
+        this.didDismiss.emit();
+      });
   }
 
 }
