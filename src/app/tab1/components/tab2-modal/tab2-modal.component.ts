@@ -3,14 +3,14 @@ import { Component, Input, OnInit } from '@angular/core';
 import { ModalComponent } from '../../../wrf-modal/components/wrf-modal-stack/wrf-modal-stack.component';
 import { WrfModalControllerService } from '../../../wrf-modal/services/wrf-modal-controller.service';
 import { ModalEvent } from '../../../wrf-modal/components/wrf-modal/wrf-modal.component';
-import { Tab2ModalComponent } from '../tab2-modal/tab2-modal.component';
+import { Tab3ModalComponent } from '../tab3-modal/tab3-modal.component';
 
 @Component({
-  selector: 'app-tab1-modal',
-  templateUrl: './tab1-modal.component.html',
-  styleUrls: ['./tab1-modal.component.scss']
+  selector: 'app-tab2-modal',
+  templateUrl: './tab2-modal.component.html',
+  styleUrls: ['./tab2-modal.component.scss']
 })
-export class Tab1ModalComponent implements OnInit, ModalComponent {
+export class Tab2ModalComponent implements OnInit, ModalComponent {
 
   @Input() modalId: string;
   @Input() firstName: string;
@@ -28,7 +28,7 @@ export class Tab1ModalComponent implements OnInit, ModalComponent {
 
   onPresent(): void {
     this.modalControllerService.present({
-      component: Tab2ModalComponent,
+      component: Tab3ModalComponent,
       componentProps: {
         firstName: 'Alex',
         lastName: 'Korenev'

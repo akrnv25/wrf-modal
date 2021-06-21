@@ -1,10 +1,10 @@
 <app-wrf-modal
-  *ngIf="configs.length"
-  [config]="configs[0]"
+  *ngFor="let config of configs; trackBy: configsByID"
+  [config]="config"
   (willPresent)="onWillPresent($event)"
   (didPresent)="onDidPresent($event)"
-  (didDismiss)="onDidDismiss($event)"
   (willDismiss)="onWillDismiss($event)"
+  (didDismiss)="onDidDismiss($event)"
 >
   <ng-container #modalContent></ng-container>
 </app-wrf-modal>
