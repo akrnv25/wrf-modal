@@ -101,8 +101,8 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
         const { deltaY } = event;
         const top = startTop + deltaY;
         let checkedTop;
-        if (top < this.breakpoints.full) {
-          checkedTop = this.breakpoints.full;
+        if (top < this.breakpoints.scrolledFull) {
+          checkedTop = this.breakpoints.scrolledFull;
         } else if (top > this.breakpoints.closed) {
           checkedTop = this.breakpoints.closed;
         } else {
@@ -113,19 +113,24 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
         direction = checkedTop < prevTop ? SwipeDirection.UP : SwipeDirection.DOWN;
         prevTop = checkedTop;
       },
-      onEnd: () => {
+      onEnd: (event: GestureDetail) => {
+        const { deltaY } = event;
         switch (direction) {
           case SwipeDirection.UP:
-            this.pushContainer(this.breakpoints.full);
+            const isUpScrolling = startTop === this.breakpoints.full && deltaY < 0;
+            if (!isUpScrolling) {
+              this.pushContainer(this.breakpoints.full);
+            }
             break;
           case SwipeDirection.DOWN:
             const { y } = this.container.getBoundingClientRect();
             const isClosing = this.breakpoints.toClose < y;
+            const isDownScrolling = startTop < this.breakpoints.full && y <= this.breakpoints.full;
             if (isClosing) {
               this.pushContainer(this.breakpoints.closed).then(() => {
                 this.modalControllerService.dismiss(this.config.id);
               });
-            } else {
+            } else if (!isDownScrolling) {
               this.pushContainer(this.breakpoints.partial);
             }
             break;
