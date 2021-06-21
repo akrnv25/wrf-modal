@@ -152,14 +152,25 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     return new Promise(resolve => {
       setTimeout(() => {
         const modalHeight = this.modal.clientHeight;
-        const containerHaight = this.container.clientHeight;
-        this.breakpoints = {
-          scrolledFull: modalHeight - containerHaight,
-          full: containerHaight > modalHeight ? 0 : modalHeight - containerHaight,
-          partial: Math.round(modalHeight * 0.5),
-          toClose: Math.round(modalHeight * 0.75),
-          closed: modalHeight
-        };
+        const containerHeight = this.container.clientHeight;
+        const isSmallContainer = containerHeight < modalHeight * 0.5;
+        if (isSmallContainer) {
+          this.breakpoints = {
+            scrolledFull: modalHeight - containerHeight,
+            full: modalHeight - containerHeight,
+            partial: modalHeight - containerHeight,
+            toClose: Math.round(modalHeight * 0.75),
+            closed: modalHeight
+          };
+        } else {
+          this.breakpoints = {
+            scrolledFull: modalHeight - containerHeight,
+            full: containerHeight > modalHeight ? 0 : modalHeight - containerHeight,
+            partial: Math.round(modalHeight * 0.5),
+            toClose: Math.round(modalHeight * 0.75),
+            closed: modalHeight
+          };
+        }
         resolve();
       }, 0);
     });
