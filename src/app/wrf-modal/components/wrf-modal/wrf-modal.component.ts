@@ -54,8 +54,9 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     this.handleDismiss();
     this.handleContainerSwipe();
     this.handleBackdropClick();
-    this.calcBreakpoints();
-    this.present();
+    this.showElements();
+    this.calcBreakpoints()
+      .then(() => this.present());
   }
 
   ngOnDestroy(): void {
@@ -77,7 +78,8 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe((event: ModalEvent) => {
-        this.dismiss(event.data);
+        this.dismiss(event.data)
+          .then(() => this.hideElements());
       });
   }
 
@@ -140,14 +142,19 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
       });
   }
 
-  private calcBreakpoints(): void {
-    const height = this.modal.clientHeight;
-    this.breakpoints = {
-      fullSize: 0,
-      partialSize: Math.round(height * 0.5),
-      needClose: Math.round(height * 0.75),
-      closed: height
-    };
+  private calcBreakpoints(): Promise<void> {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const height = this.modal.clientHeight;
+        this.breakpoints = {
+          fullSize: 0,
+          partialSize: Math.round(height * 0.5),
+          needClose: Math.round(height * 0.75),
+          closed: height
+        };
+        resolve();
+      }, 0);
+    });
   }
 
   private pushContainer(top: number): Promise<void> {
@@ -163,22 +170,28 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private present(): void {
-    this.willPresent.emit({ id: this.config.id });
+  private showElements(): void {
     this.renderer2.setStyle(this.modal, 'z-index', '1000');
-    this.renderer2.setStyle(this.backdrop, 'display', 'block');
-    this.renderer2.setStyle(this.container, 'display', 'block');
-    this.pushContainer(this.breakpoints.partialSize)
+    this.renderer2.setStyle(this.backdrop, 'z-index', '1000');
+    this.renderer2.setStyle(this.container, 'z-index', '1000');
+  }
+
+  private hideElements(): void {
+    this.renderer2.setStyle(this.modal, 'z-index', '-1000');
+    this.renderer2.setStyle(this.backdrop, 'z-index', '-1000');
+    this.renderer2.setStyle(this.container, 'z-index', '-1000');
+  }
+
+  private present(): Promise<void> {
+    this.willPresent.emit({ id: this.config.id });
+    return this.pushContainer(this.breakpoints.partialSize)
       .then(() => this.didPresent.emit({ id: this.config.id }));
   }
 
-  private dismiss(data: any): void {
+  private dismiss(data: any): Promise<void> {
     this.willDismiss.emit({ id: this.config.id, data });
-    this.pushContainer(this.breakpoints.closed)
+    return this.pushContainer(this.breakpoints.closed)
       .then(() => {
-        this.renderer2.setStyle(this.modal, 'z-index', '-1000');
-        this.renderer2.setStyle(this.backdrop, 'display', 'none');
-        this.renderer2.setStyle(this.container, 'display', 'none');
         this.didDismiss.emit({ id: this.config.id, data });
       });
   }
