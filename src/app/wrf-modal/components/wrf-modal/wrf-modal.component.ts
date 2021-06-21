@@ -1,9 +1,9 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, Renderer2 } from '@angular/core';
 import { Gesture, GestureController, GestureDetail } from '@ionic/angular';
 import { fromEvent, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { filter, take, takeUntil } from 'rxjs/operators';
 
-import { ModalConfig } from '../../services/wrf-modal-controller.service';
+import { ModalConfig, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
 
 enum SwipeDirection {
   UP,
@@ -17,6 +17,11 @@ interface ModalBreakpoints {
   closed: number;
 }
 
+export interface ModalEvent {
+  id: string;
+  data?: any;
+}
+
 @Component({
   selector: 'app-wrf-modal',
   templateUrl: './wrf-modal.component.html',
@@ -25,10 +30,10 @@ interface ModalBreakpoints {
 export class WrfModalComponent implements AfterViewInit, OnDestroy {
 
   @Input() config: ModalConfig;
-  @Output() willPresent: EventEmitter<void> = new EventEmitter();
-  @Output() didPresent: EventEmitter<void> = new EventEmitter();
-  @Output() willDismiss: EventEmitter<void> = new EventEmitter();
-  @Output() didDismiss: EventEmitter<void> = new EventEmitter();
+  @Output() willPresent: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() didPresent: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() willDismiss: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() didDismiss: EventEmitter<ModalEvent> = new EventEmitter();
 
   private breakpoints: ModalBreakpoints;
   private modal: HTMLElement;
@@ -39,16 +44,18 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
   constructor(
     private gestureController: GestureController,
     private renderer2: Renderer2,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private modalControllerService: WrfModalControllerService
   ) {
   }
 
   ngAfterViewInit(): void {
-    this.initElements();
+    this.findElements();
+    this.handleDismiss();
     this.handleContainerSwipe();
     this.handleBackdropClick();
     this.calcBreakpoints();
-    this.showElements();
+    this.present();
   }
 
   ngOnDestroy(): void {
@@ -56,10 +63,22 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private initElements(): void {
+  private findElements(): void {
     this.modal = this.elementRef.nativeElement.querySelector('.wrf-modal');
     this.backdrop = this.modal.querySelector('.wrf-modal__backdrop');
     this.container = this.modal.querySelector('.wrf-modal__container');
+  }
+
+  private handleDismiss(): void {
+    this.modalControllerService.toDismiss$
+      .pipe(
+        filter((event: ModalEvent) => event.id === this.config.id),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: ModalEvent) => {
+        this.dismiss(event.data);
+      });
   }
 
   private handleContainerSwipe(): void {
@@ -101,7 +120,7 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
             const isClosing = this.breakpoints.needClose < y;
             if (isClosing) {
               this.pushContainer(this.breakpoints.closed).then(() => {
-                this.hideElements();
+                this.modalControllerService.dismiss(this.config.id);
               });
             } else {
               this.pushContainer(this.breakpoints.partialSize);
@@ -117,7 +136,7 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     fromEvent(this.backdrop, 'click')
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.hideElements();
+        this.modalControllerService.dismiss(this.config.id);
       });
   }
 
@@ -144,23 +163,23 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private showElements(): void {
-    this.willPresent.emit();
+  private present(): void {
+    this.willPresent.emit({ id: this.config.id });
     this.renderer2.setStyle(this.modal, 'z-index', '1000');
     this.renderer2.setStyle(this.backdrop, 'display', 'block');
     this.renderer2.setStyle(this.container, 'display', 'block');
     this.pushContainer(this.breakpoints.partialSize)
-      .then(() => this.didPresent.emit());
+      .then(() => this.didPresent.emit({ id: this.config.id }));
   }
 
-  private hideElements(): void {
-    this.willDismiss.emit();
+  private dismiss(data: any): void {
+    this.willDismiss.emit({ id: this.config.id, data });
     this.pushContainer(this.breakpoints.closed)
       .then(() => {
         this.renderer2.setStyle(this.modal, 'z-index', '-1000');
         this.renderer2.setStyle(this.backdrop, 'display', 'none');
         this.renderer2.setStyle(this.container, 'display', 'none');
-        this.didDismiss.emit();
+        this.didDismiss.emit({ id: this.config.id, data });
       });
   }
 

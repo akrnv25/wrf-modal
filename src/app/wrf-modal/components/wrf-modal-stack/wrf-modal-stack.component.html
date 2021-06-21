@@ -1,10 +1,10 @@
 <app-wrf-modal
   *ngIf="configs.length"
   [config]="configs[0]"
-  (willPresent)="onWillPresent()"
-  (didPresent)="onDidPresent()"
-  (didDismiss)="onDidDismiss()"
-  (willDismiss)="onWillDismiss()"
+  (willPresent)="onWillPresent($event)"
+  (didPresent)="onDidPresent($event)"
+  (didDismiss)="onDidDismiss($event)"
+  (willDismiss)="onWillDismiss($event)"
 >
   <ng-container #modalContent></ng-container>
 </app-wrf-modal>

@@ -2,6 +2,7 @@ import {
   ChangeDetectorRef,
   Component,
   ComponentFactoryResolver,
+  ComponentRef,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -11,7 +12,11 @@ import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 
 import { ModalConfig, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
-import { WrfModalComponent } from '../wrf-modal/wrf-modal.component';
+import { ModalEvent, WrfModalComponent } from '../wrf-modal/wrf-modal.component';
+
+export interface ModalComponent {
+  modalId: string;
+}
 
 @Component({
   selector: 'app-wrf-modal-stack',
@@ -35,7 +40,6 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.modalControllerService.toPresent$
-      .asObservable()
       .pipe(
         filter((config: ModalConfig) => !!config.component),
         takeUntil(this.destroy$)
@@ -45,7 +49,8 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges();
         this.modalContent.clear();
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
-        const componentRef = this.modalContent.createComponent(componentFactory);
+        const componentRef: ComponentRef<ModalComponent> = this.modalContent.createComponent(componentFactory);
+        componentRef.instance.modalId = config.id;
         if (config.componentProps) {
           const keys = Object.keys(config.componentProps);
           keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
@@ -58,20 +63,30 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onWillPresent(): void {
-    this.configs[0].onWillPresent();
+  onWillPresent(event: ModalEvent): void {
+    const config = this.getConfig(event.id);
+    config.onWillPresent(event);
   }
 
-  onDidPresent(): void {
-    this.configs[0].onDidPresent();
+  onDidPresent(event: ModalEvent): void {
+    const config = this.getConfig(event.id);
+    config.onDidPresent(event);
   }
 
-  onDidDismiss(): void {
-    this.configs[0].onDidDismiss();
+  onDidDismiss(event: ModalEvent): void {
+    const config = this.getConfig(event.id);
+    config.onDidDismiss(event);
+    this.configs = this.configs.filter(c => c.id !== event.id);
+    this.changeDetectorRef.detectChanges();
   }
 
-  onWillDismiss(): void {
-    this.configs[0].onWillDismiss();
+  onWillDismiss(event: ModalEvent): void {
+    const config = this.getConfig(event.id);
+    config.onWillDismiss(event);
+  }
+
+  private getConfig(id: string): ModalConfig {
+    return this.configs.find(config => config.id === id);
   }
 
 }
