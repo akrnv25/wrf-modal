@@ -11,9 +11,10 @@ enum SwipeDirection {
 }
 
 interface ModalBreakpoints {
-  fullSize: number;
-  partialSize: number;
-  needClose: number;
+  scrolledFull: number;
+  full: number;
+  partial: number;
+  toClose: number;
   closed: number;
 }
 
@@ -100,8 +101,8 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
         const { deltaY } = event;
         const top = startTop + deltaY;
         let checkedTop;
-        if (top < this.breakpoints.fullSize) {
-          checkedTop = this.breakpoints.fullSize;
+        if (top < this.breakpoints.full) {
+          checkedTop = this.breakpoints.full;
         } else if (top > this.breakpoints.closed) {
           checkedTop = this.breakpoints.closed;
         } else {
@@ -115,17 +116,17 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
       onEnd: () => {
         switch (direction) {
           case SwipeDirection.UP:
-            this.pushContainer(this.breakpoints.fullSize);
+            this.pushContainer(this.breakpoints.full);
             break;
           case SwipeDirection.DOWN:
             const { y } = this.container.getBoundingClientRect();
-            const isClosing = this.breakpoints.needClose < y;
+            const isClosing = this.breakpoints.toClose < y;
             if (isClosing) {
               this.pushContainer(this.breakpoints.closed).then(() => {
                 this.modalControllerService.dismiss(this.config.id);
               });
             } else {
-              this.pushContainer(this.breakpoints.partialSize);
+              this.pushContainer(this.breakpoints.partial);
             }
             break;
         }
@@ -145,12 +146,14 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
   private calcBreakpoints(): Promise<void> {
     return new Promise(resolve => {
       setTimeout(() => {
-        const height = this.modal.clientHeight;
+        const modalHeight = this.modal.clientHeight;
+        const containerHaight = this.container.clientHeight;
         this.breakpoints = {
-          fullSize: 0,
-          partialSize: Math.round(height * 0.5),
-          needClose: Math.round(height * 0.75),
-          closed: height
+          scrolledFull: modalHeight - containerHaight,
+          full: containerHaight > modalHeight ? 0 : modalHeight - containerHaight,
+          partial: Math.round(modalHeight * 0.5),
+          toClose: Math.round(modalHeight * 0.75),
+          closed: modalHeight
         };
         resolve();
       }, 0);
@@ -159,7 +162,7 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
 
   private pushContainer(top: number): Promise<void> {
     const animationDuration = 300;
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.renderer2.setStyle(this.container, 'transition', `${animationDuration}ms ease-in`);
       setTimeout(() => {
         this.renderer2.setStyle(this.container, 'top', `${top}px`);
@@ -184,7 +187,7 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
 
   private present(): Promise<void> {
     this.willPresent.emit({ id: this.config.id });
-    return this.pushContainer(this.breakpoints.partialSize)
+    return this.pushContainer(this.breakpoints.partial)
       .then(() => this.didPresent.emit({ id: this.config.id }));
   }
 
