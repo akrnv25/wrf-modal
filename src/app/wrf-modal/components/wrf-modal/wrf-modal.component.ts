@@ -52,12 +52,10 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.findElements();
-    this.handleDismiss();
     this.handleContainerSwipe();
     this.handleBackdropClick();
-    this.showElements();
-    this.calcBreakpoints()
-      .then(() => this.present());
+    this.handlePresent();
+    this.handleDismiss();
   }
 
   ngOnDestroy(): void {
@@ -69,19 +67,6 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
     this.modal = this.elementRef.nativeElement.querySelector('.wrf-modal');
     this.backdrop = this.modal.querySelector('.wrf-modal__backdrop');
     this.container = this.modal.querySelector('.wrf-modal__container');
-  }
-
-  private handleDismiss(): void {
-    this.modalControllerService.toDismiss$
-      .pipe(
-        filter((event: ModalEvent) => event.id === this.config.id),
-        take(1),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((event: ModalEvent) => {
-        this.dismiss(event.data)
-          .then(() => this.hideElements());
-      });
   }
 
   private handleContainerSwipe(): void {
@@ -148,6 +133,35 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
       });
   }
 
+  private handlePresent(): void {
+    this.modalControllerService.toPresent$
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === this.config.id),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: ModalEvent) => {
+        this.showElements();
+        this.calcBreakpoints()
+          .then(() => this.present());
+      });
+  }
+
+  private handleDismiss(): void {
+    this.modalControllerService.toDismiss$
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === this.config.id),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: ModalEvent) => {
+        this.dismiss(event.data)
+          .then(() => this.hideElements());
+      });
+  }
+
   private calcBreakpoints(): Promise<void> {
     return new Promise(resolve => {
       setTimeout(() => {
@@ -202,16 +216,22 @@ export class WrfModalComponent implements AfterViewInit, OnDestroy {
   }
 
   private present(): Promise<void> {
-    this.willPresent.emit({ id: this.config.id });
+    const event: ModalEvent = { id: this.config.id };
+    this.willPresent.emit(event);
     return this.pushContainer(this.breakpoints.partial)
-      .then(() => this.didPresent.emit({ id: this.config.id }));
+      .then(() => {
+        this.didPresent.emit(event);
+        this.modalControllerService.presented$.next(event);
+      });
   }
 
   private dismiss(data: any): Promise<void> {
-    this.willDismiss.emit({ id: this.config.id, data });
+    const event: ModalEvent = { id: this.config.id, data };
+    this.willDismiss.emit(event);
     return this.pushContainer(this.breakpoints.closed)
       .then(() => {
-        this.didDismiss.emit({ id: this.config.id, data });
+        this.didDismiss.emit(event);
+        this.modalControllerService.dismissed$.next(event);
       });
   }
 

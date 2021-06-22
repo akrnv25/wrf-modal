@@ -25,12 +25,14 @@ export class Tab3ModalComponent implements OnInit, ModalComponent {
   }
 
   onDismissAll(): void {
-    this.modalControllerService.dismissAll();
+    this.modalControllerService.dismissAll()
+      .then(event => console.log('dismissAll', event));
   }
 
   onDismiss(): void {
     const fullName = `${this.firstName} ${this.lastName}`;
-    this.modalControllerService.dismiss(this.modalId, fullName);
+    this.modalControllerService.dismiss(this.modalId, fullName)
+      .then(event => console.log('dismiss', event));
   }
 
 }

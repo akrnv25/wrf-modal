@@ -10,10 +10,10 @@ import {
   ViewContainerRef
 } from '@angular/core';
 import { Subject } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { filter, take, takeUntil, tap } from 'rxjs/operators';
 
-import { ModalConfig, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
-import { ModalEvent } from '../wrf-modal/wrf-modal.component';
+import { Modal, ModalConfig, WrfModalControllerService } from '../../services/wrf-modal-controller.service';
+import { ModalEvent, WrfModalComponent } from '../wrf-modal/wrf-modal.component';
 
 export interface ModalComponent {
   modalId: string;
@@ -29,6 +29,7 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
   configs: ModalConfig[] = [];
   private destroy$: Subject<void> = new Subject();
 
+  @ViewChildren(WrfModalComponent, { read: WrfModalComponent }) private modalComponents: QueryList<WrfModalComponent>;
   @ViewChildren('modalContent', { read: ViewContainerRef }) private modalContents: QueryList<ViewContainerRef>;
 
   constructor(
@@ -39,7 +40,8 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.modalControllerService.toPresent$
+    this.modalControllerService.toCreate$
+      .asObservable()
       .pipe(
         filter((config: ModalConfig) => !!config.component),
         takeUntil(this.destroy$)
@@ -55,6 +57,14 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
           const keys = Object.keys(config.componentProps);
           keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
         }
+        const modal: Modal = {
+          id: config.id,
+          onWillPresent: this.onWillPresent(config.id),
+          onDidPresent: this.onDidPresent(config.id),
+          onWillDismiss: this.onWillDismiss(config.id),
+          onDidDismiss: this.onDidDismiss(config.id)
+        };
+        this.modalControllerService.created$.next(modal);
       });
   }
 
@@ -63,34 +73,52 @@ export class WrfModalStackComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onWillPresent(event: ModalEvent): void {
-    const config = this.getConfig(event.id);
-    config.onWillPresent(event);
-  }
-
-  onDidPresent(event: ModalEvent): void {
-    const config = this.getConfig(event.id);
-    config.onDidPresent(event);
-  }
-
-  onWillDismiss(event: ModalEvent): void {
-    const config = this.getConfig(event.id);
-    config.onWillDismiss(event);
-  }
-
-  onDidDismiss(event: ModalEvent): void {
-    const config = this.getConfig(event.id);
-    config.onDidDismiss(event);
-    this.configs = this.configs.filter(c => c.id !== event.id);
-    this.changeDetectorRef.detectChanges();
-  }
-
   configsByID(index: number, config: ModalConfig): string {
     return config.id;
   }
 
-  private getConfig(id: string): ModalConfig {
-    return this.configs.find(config => config.id === id);
+  private onWillPresent(id: string): Promise<ModalEvent> {
+    return this.modalComponents.last.willPresent
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === id),
+        take(1)
+      )
+      .toPromise();
+  }
+
+  private onDidPresent(id: string): Promise<ModalEvent> {
+    return this.modalComponents.last.didPresent
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === id),
+        take(1)
+      )
+      .toPromise();
+  }
+
+  private onWillDismiss(id: string): Promise<ModalEvent> {
+    return this.modalComponents.last.willDismiss
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === id),
+        take(1)
+      )
+      .toPromise();
+  }
+
+  private onDidDismiss(id: string): Promise<ModalEvent> {
+    return this.modalComponents.last.didDismiss
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === id),
+        take(1),
+        tap((event: ModalEvent) => {
+            this.configs = this.configs.filter(config => config.id !== event.id);
+            this.changeDetectorRef.detectChanges();
+        })
+      )
+      .toPromise();
   }
 
 }
