@@ -7,6 +7,8 @@ export interface ModalConfig {
   componentProps: { [key: string]: any };
   swipeToClose: boolean;
   showBackdrop: boolean;
+  swipeToExpand: boolean;
+  clickBackdropToClose: boolean;
   heightPart: number;
   id?: string;
 }

@@ -41,7 +41,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     this.findElements();
     this.setBreakpoints();
     this.handleContainerSwipe();
-    this.handleBackdropClick();
+    this.handleBackdropDismiss();
     this.handlePresent();
     this.handleDismiss();
   }
@@ -68,6 +68,10 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleContainerSwipe(): void {
+    if (!this.config.swipeToClose && !this.config.swipeToExpand) {
+      return;
+    }
+
     let startHeight: number;
     let prevMoveHeight: number;
     let direction: 'up' | 'down';
@@ -80,22 +84,26 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
         startHeight = this.container.clientHeight;
       },
       onMove: (event: GestureDetail) => {
-        const moveHeight = startHeight - event.deltaY;
-        let checkedMoveHeight;
-        if (moveHeight > this.breakpoints.full) {
-          checkedMoveHeight = this.breakpoints.full;
-        } else if (moveHeight < this.breakpoints.closed) {
-          checkedMoveHeight = this.breakpoints.closed;
-        } else {
-          checkedMoveHeight = moveHeight;
+        let moveHeight = startHeight - event.deltaY;
+        if (!this.config.swipeToExpand && moveHeight > this.breakpoints.basic) {
+          moveHeight = this.breakpoints.basic;
         }
-        direction = prevMoveHeight <= checkedMoveHeight ? 'up' : 'down';
-        prevMoveHeight = checkedMoveHeight;
+        if (!this.config.swipeToClose && moveHeight < this.breakpoints.basic) {
+          moveHeight = this.breakpoints.basic;
+        }
+        if (moveHeight > this.breakpoints.full) {
+          moveHeight = this.breakpoints.full;
+        }
+        if (moveHeight < this.breakpoints.closed) {
+          moveHeight = this.breakpoints.closed;
+        }
+        direction = prevMoveHeight <= moveHeight ? 'up' : 'down';
+        prevMoveHeight = moveHeight;
         this.renderer2.setStyle(this.container, 'transition', 'none');
-        this.renderer2.setStyle(this.container, 'height', `${checkedMoveHeight}px`);
+        this.renderer2.setStyle(this.container, 'height', `${moveHeight}px`);
       },
       onEnd: () => {
-        if (prevMoveHeight >= this.breakpoints.basic) {
+        if (this.config.swipeToExpand && prevMoveHeight > this.breakpoints.basic) {
           switch (direction) {
             case 'up':
               this.resizeContainer(this.breakpoints.full);
@@ -104,7 +112,8 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
               this.resizeContainer(this.breakpoints.basic);
               break;
           }
-        } else {
+        }
+        if (this.config.swipeToClose && prevMoveHeight < this.breakpoints.basic) {
           switch (direction) {
             case 'up':
               this.resizeContainer(this.breakpoints.basic);
@@ -119,12 +128,14 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     gesture.enable(true);
   }
 
-  private handleBackdropClick(): void {
-    fromEvent(this.backdrop, 'click')
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.dismiss({ id: this.config.id });
-      });
+  private handleBackdropDismiss(): void {
+    if (this.config.showBackdrop && this.config.clickBackdropToClose) {
+      fromEvent(this.backdrop, 'click')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.dismiss({ id: this.config.id });
+        });
+    }
   }
 
   private handlePresent(): void {
@@ -168,13 +179,17 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
 
   private showElements(): void {
     this.renderer2.setStyle(this.modal, 'display', 'block');
-    this.renderer2.setStyle(this.backdrop, 'display', 'block');
+    if (this.config.showBackdrop) {
+      this.renderer2.setStyle(this.backdrop, 'display', 'block');
+    }
     this.renderer2.setStyle(this.container, 'display', 'block');
   }
 
   private hideElements(): void {
     this.renderer2.setStyle(this.modal, 'display', 'none');
-    this.renderer2.setStyle(this.backdrop, 'display', 'none');
+    if (this.config.showBackdrop) {
+      this.renderer2.setStyle(this.backdrop, 'display', 'none');
+    }
     this.renderer2.setStyle(this.container, 'display', 'none');
   }
 
