@@ -1,0 +1,6 @@
+<app-modal
+  *ngFor="let config of configs; trackBy: configsByID"
+  [config]="config"
+>
+  <ng-container #modalContent></ng-container>
+</app-modal>

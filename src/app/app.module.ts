@@ -6,6 +6,7 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { WrfModalModule } from './wrf-modal/wrf-modal.module';
+import { ModalModule } from './modal/modal.module';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { WrfModalModule } from './wrf-modal/wrf-modal.module';
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
-    WrfModalModule
+    WrfModalModule,
+    ModalModule,
   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
