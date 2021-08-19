@@ -12,11 +12,11 @@ import { ModalStreamService } from '../../services/modal-stream.service';
 })
 export class ModalComponent implements AfterViewInit, OnDestroy {
 
-  @Input() config: ModalConfig;
-  @Output() willPresent: EventEmitter<ModalEvent> = new EventEmitter();
-  @Output() didPresent: EventEmitter<ModalEvent> = new EventEmitter();
-  @Output() willDismiss: EventEmitter<ModalEvent> = new EventEmitter();
-  @Output() didDismiss: EventEmitter<ModalEvent> = new EventEmitter();
+  @Input() public config: ModalConfig;
+  @Output() public willPresent: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() public didPresent: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() public willDismiss: EventEmitter<ModalEvent> = new EventEmitter();
+  @Output() public didDismiss: EventEmitter<ModalEvent> = new EventEmitter();
 
   private modal: HTMLElement;
   private backdrop: HTMLElement;
@@ -37,7 +37,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
   ) {
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     this.findElements();
     this.setBreakpoints();
     this.handleContainerSwipe();
@@ -46,9 +46,16 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     this.handleDismiss();
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private findElements(): void {
+    this.modal = this.elementRef.nativeElement.querySelector('.modal');
+    this.backdrop = this.modal.querySelector('.modal__backdrop');
+    this.container = this.modal.querySelector('.modal__container');
+    this.swipeLine = this.modal.querySelector('.modal__swipe-line');
   }
 
   private setBreakpoints(): void {
@@ -107,7 +114,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
               break;
           }
         }
-      }
+      },
     });
     gesture.enable(true);
   }
@@ -120,11 +127,30 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
       });
   }
 
-  private findElements(): void {
-    this.modal = this.elementRef.nativeElement.querySelector('.modal');
-    this.backdrop = this.modal.querySelector('.modal__backdrop');
-    this.container = this.modal.querySelector('.modal__container');
-    this.swipeLine = this.modal.querySelector('.modal__swipe-line');
+  private handlePresent(): void {
+    this.modalStreamService.toPresent$
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === this.config.id),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.present();
+      });
+  }
+
+  private handleDismiss(): void {
+    this.modalStreamService.toDismiss$
+      .asObservable()
+      .pipe(
+        filter((event: ModalEvent) => event.id === this.config.id),
+        take(1),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: ModalEvent) => {
+        this.dismiss(event);
+      });
   }
 
   private resizeContainer(height: number): Promise<void> {
@@ -152,48 +178,6 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     this.renderer2.setStyle(this.container, 'display', 'none');
   }
 
-  private getScreenSize(): { width: number; height: number } {
-    const size = { width: 0, height: 0 };
-    if ((<any>window).cordova) {
-      console.log('cordova');
-      size.width = screen.width;
-      size.height = screen.height;
-    } else {
-      size.width = screen.width;
-      size.height = document.body.clientHeight;
-      if (!size.height) {
-        size.height = screen.height;
-      }
-    }
-    return size;
-  }
-
-  private handlePresent(): void {
-    this.modalStreamService.toPresent$
-      .asObservable()
-      .pipe(
-        filter((event: ModalEvent) => event.id === this.config.id),
-        take(1),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((event: ModalEvent) => {
-        this.present();
-      });
-  }
-
-  private handleDismiss(): void {
-    this.modalStreamService.toDismiss$
-      .asObservable()
-      .pipe(
-        filter((event: ModalEvent) => event.id === this.config.id),
-        take(1),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((event: ModalEvent) => {
-        this.dismiss(event);
-      });
-  }
-
   private present(): void {
     const event: ModalEvent = { id: this.config.id };
     this.willPresent.emit(event);
@@ -213,6 +197,22 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
         this.didDismiss.emit(event);
         this.modalStreamService.dismissed$.next(event);
       });
+  }
+
+  private getScreenSize(): { width: number; height: number } {
+    const size = { width: 0, height: 0 };
+    if ((<any>window).cordova) {
+      console.log('cordova');
+      size.width = screen.width;
+      size.height = screen.height;
+    } else {
+      size.width = screen.width;
+      size.height = document.body.clientHeight;
+      if (!size.height) {
+        size.height = screen.height;
+      }
+    }
+    return size;
   }
 
 }

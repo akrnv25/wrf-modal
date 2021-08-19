@@ -5,11 +5,11 @@ import { Modal, ModalConfig, ModalEvent } from './modal-controller.service';
 @Injectable()
 export class ModalStreamService {
 
-  toCreate$: Subject<ModalConfig> = new Subject();
-  created$: ReplaySubject<Modal> = new ReplaySubject();
-  toPresent$: Subject<ModalEvent> = new Subject();
-  presented$: ReplaySubject<ModalEvent> = new ReplaySubject();
-  toDismiss$: Subject<ModalEvent> = new Subject();
-  dismissed$: ReplaySubject<ModalEvent> = new ReplaySubject();
+  public toCreate$: Subject<ModalConfig> = new Subject();
+  public created$: ReplaySubject<Modal> = new ReplaySubject();
+  public toPresent$: Subject<ModalEvent> = new Subject();
+  public presented$: ReplaySubject<ModalEvent> = new ReplaySubject();
+  public toDismiss$: Subject<ModalEvent> = new Subject();
+  public dismissed$: ReplaySubject<ModalEvent> = new ReplaySubject();
 
 }

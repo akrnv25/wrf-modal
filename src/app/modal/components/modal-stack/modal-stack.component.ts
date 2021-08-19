@@ -22,7 +22,7 @@ import { ModalStreamService } from '../../services/modal-stream.service';
 })
 export class ModalStackComponent implements OnInit, OnDestroy {
 
-  configs: ModalConfig[] = [];
+  public configs: ModalConfig[] = [];
   private destroy$: Subject<void> = new Subject();
 
   @ViewChildren(ModalComponent, { read: ModalComponent }) private modalComponents: QueryList<ModalComponent>;
@@ -35,7 +35,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
   ) {
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.modalStreamService.toCreate$
       .asObservable()
       .pipe(
@@ -64,12 +64,12 @@ export class ModalStackComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  configsByID(index: number, config: ModalConfig): string {
+  public configsByID(index: number, config: ModalConfig): string {
     return config.id;
   }
 

@@ -4,7 +4,7 @@ import { ModalStreamService } from './modal-stream.service';
 
 export interface ModalConfig {
   component: Type<{ modalId: string }>;
-  componentProps?: { [key: string]: any };
+  componentProps: { [key: string]: any };
   swipeToClose: boolean;
   showBackdrop: boolean;
   heightPart: number;
@@ -35,7 +35,7 @@ export class ModalControllerService {
   ) {
   }
 
-  create(config: ModalConfig): Promise<Modal> {
+  public create(config: ModalConfig): Promise<Modal> {
     const id = `${Date.now()}`;
     this.modalStreamService.toCreate$.next({ ...config, id });
     return this.modalStreamService.created$
@@ -48,7 +48,7 @@ export class ModalControllerService {
       .toPromise();
   }
 
-  present(id: string): Promise<ModalEvent> {
+  public present(id: string): Promise<ModalEvent> {
     if (this.isUndefined(id)) {
       return;
     }
@@ -63,12 +63,12 @@ export class ModalControllerService {
       .toPromise();
   }
 
-  dismiss<D = any>(id: string, data?: D, role?: string): Promise<ModalEvent> {
+  public dismiss<D = any>(id: string, data?: D, role?: string): Promise<ModalEvent> {
     if (this.isUndefined(id)) {
       return;
     }
 
-    this.modalStreamService.toDismiss$.next({ id, data });
+    this.modalStreamService.toDismiss$.next({ id, data, role });
     return this.modalStreamService.dismissed$
       .asObservable()
       .pipe(
@@ -81,7 +81,7 @@ export class ModalControllerService {
       .toPromise();
   }
 
-  dismissAll(): Promise<void> {
+  public dismissAll(): Promise<void> {
     return new Promise(resolve => {
       this.modals.forEach(async modal => {
         await this.dismiss(modal.id);
