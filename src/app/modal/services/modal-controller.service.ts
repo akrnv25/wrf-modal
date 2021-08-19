@@ -1,9 +1,9 @@
 import { Injectable, Type } from '@angular/core';
-import { ReplaySubject, Subject } from 'rxjs';
 import { filter, take, tap } from 'rxjs/operators';
+import { ModalStreamService } from './modal-stream.service';
 
 export interface ModalConfig {
-  component: Type<any>;
+  component: Type<{ modalId: string }>;
   componentProps?: { [key: string]: any };
   swipeToClose: boolean;
   showBackdrop: boolean;
@@ -19,31 +19,26 @@ export interface Modal {
   id: string;
 }
 
-export interface ModalEvent {
+export interface ModalEvent<D = any> {
   id: string;
-  data?: any;
+  data?: D;
   role?: string;
 }
 
 @Injectable()
 export class ModalControllerService {
 
-  toCreate$: Subject<ModalConfig> = new Subject();
-  created$: ReplaySubject<Modal> = new ReplaySubject();
-  toPresent$: Subject<ModalEvent> = new Subject();
-  presented$: ReplaySubject<ModalEvent> = new ReplaySubject();
-  toDismiss$: Subject<ModalEvent> = new Subject();
-  dismissed$: ReplaySubject<ModalEvent> = new ReplaySubject();
-
   private modals: Modal[] = [];
 
-  constructor() {
+  constructor(
+    private modalStreamService: ModalStreamService,
+  ) {
   }
 
   create(config: ModalConfig): Promise<Modal> {
     const id = `${Date.now()}`;
-    this.toCreate$.next({ ...config, id });
-    return this.created$
+    this.modalStreamService.toCreate$.next({ ...config, id });
+    return this.modalStreamService.created$
       .asObservable()
       .pipe(
         filter((modal: Modal) => modal.id === id),
@@ -58,8 +53,8 @@ export class ModalControllerService {
       return;
     }
 
-    this.toPresent$.next({ id });
-    return this.presented$
+    this.modalStreamService.toPresent$.next({ id });
+    return this.modalStreamService.presented$
       .asObservable()
       .pipe(
         filter((event: ModalEvent) => event.id === id),
@@ -68,13 +63,13 @@ export class ModalControllerService {
       .toPromise();
   }
 
-  dismiss(id: string, data: any = null): Promise<ModalEvent> {
+  dismiss<D = any>(id: string, data?: D, role?: string): Promise<ModalEvent> {
     if (this.isUndefined(id)) {
       return;
     }
 
-    this.toDismiss$.next({ id, data });
-    return this.dismissed$
+    this.modalStreamService.toDismiss$.next({ id, data });
+    return this.modalStreamService.dismissed$
       .asObservable()
       .pipe(
         filter((event: ModalEvent) => event.id === id),

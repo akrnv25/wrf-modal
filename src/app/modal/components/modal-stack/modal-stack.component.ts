@@ -12,7 +12,8 @@ import {
 import { Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { ModalComponent } from '../modal/modal.component';
-import { Modal, ModalConfig, ModalControllerService, ModalEvent } from '../../services/modal-controller.service';
+import { Modal, ModalConfig, ModalEvent } from '../../services/modal-controller.service';
+import { ModalStreamService } from '../../services/modal-stream.service';
 
 @Component({
   selector: 'app-modal-stack',
@@ -28,14 +29,14 @@ export class ModalStackComponent implements OnInit, OnDestroy {
   @ViewChildren('modalContent', { read: ViewContainerRef }) private modalContents: QueryList<ViewContainerRef>;
 
   constructor(
-    private modalControllerService: ModalControllerService,
     private changeDetectorRef: ChangeDetectorRef,
-    private componentFactoryResolver: ComponentFactoryResolver
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private modalStreamService: ModalStreamService,
   ) {
   }
 
   ngOnInit(): void {
-    this.modalControllerService.toCreate$
+    this.modalStreamService.toCreate$
       .asObservable()
       .pipe(
         filter((config: ModalConfig) => !!config.component),
@@ -46,8 +47,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges();
         const modalContent = this.modalContents.last;
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
-        const componentRef: ComponentRef<ModalComponent> = modalContent.createComponent(componentFactory);
-        // @ts-ignore // todo
+        const componentRef: ComponentRef<{ modalId: string }> = modalContent.createComponent(componentFactory);
         componentRef.instance.modalId = config.id;
         if (config.componentProps) {
           const keys = Object.keys(config.componentProps);
@@ -60,7 +60,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
           onWillDismiss: this.onWillDismiss(config.id),
           onDidDismiss: this.onDidDismiss(config.id)
         };
-        this.modalControllerService.created$.next(modal);
+        this.modalStreamService.created$.next(modal);
       });
   }
 

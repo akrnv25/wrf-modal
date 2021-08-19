@@ -2,7 +2,8 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, O
 import { fromEvent, Subject } from 'rxjs';
 import { Gesture, GestureController, GestureDetail } from '@ionic/angular';
 import { filter, take, takeUntil } from 'rxjs/operators';
-import { ModalConfig, ModalControllerService, ModalEvent } from '../../services/modal-controller.service';
+import { ModalConfig, ModalEvent } from '../../services/modal-controller.service';
+import { ModalStreamService } from '../../services/modal-stream.service';
 
 @Component({
   selector: 'app-modal',
@@ -32,7 +33,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     private gestureController: GestureController,
     private renderer2: Renderer2,
     private elementRef: ElementRef,
-    private modalControllerService: ModalControllerService,
+    private modalStreamService: ModalStreamService,
   ) {
   }
 
@@ -102,7 +103,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
               this.resizeContainer(this.breakpoints.basic);
               break;
             case 'down':
-              this.dismiss(null);
+              this.dismiss({ id: this.config.id });
               break;
           }
         }
@@ -115,7 +116,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     fromEvent(this.backdrop, 'click')
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.dismiss(null);
+        this.dismiss({ id: this.config.id });
       });
   }
 
@@ -168,7 +169,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
   }
 
   private handlePresent(): void {
-    this.modalControllerService.toPresent$
+    this.modalStreamService.toPresent$
       .asObservable()
       .pipe(
         filter((event: ModalEvent) => event.id === this.config.id),
@@ -181,7 +182,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleDismiss(): void {
-    this.modalControllerService.toDismiss$
+    this.modalStreamService.toDismiss$
       .asObservable()
       .pipe(
         filter((event: ModalEvent) => event.id === this.config.id),
@@ -189,7 +190,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe((event: ModalEvent) => {
-        this.dismiss(event.data);
+        this.dismiss(event);
       });
   }
 
@@ -200,18 +201,17 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     this.resizeContainer(this.breakpoints.basic)
       .then(() => {
         this.didPresent.emit(event);
-        this.modalControllerService.presented$.next(event);
+        this.modalStreamService.presented$.next(event);
       });
   }
 
-  private dismiss(data: any): void {
-    const event: ModalEvent = { id: this.config.id, data };
+  private dismiss(event: ModalEvent): void {
     this.willDismiss.emit(event);
     this.resizeContainer(this.breakpoints.closed)
       .then(() => {
         this.hideElements();
         this.didDismiss.emit(event);
-        this.modalControllerService.dismissed$.next(event);
+        this.modalStreamService.dismissed$.next(event);
       });
   }
 

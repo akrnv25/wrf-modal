@@ -1,13 +1,13 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Modal, ModalControllerService } from '../../../modal/services/modal-controller.service';
-import { Tab2Modal2Component } from '../tab2-modal2/tab2-modal2.component';
+import { Tab2Modal3Component } from '../tab2-modal3/tab2-modal3.component';
 
 @Component({
-  selector: 'app-tab2-modal1',
-  templateUrl: './tab2-modal1.component.html',
-  styleUrls: ['./tab2-modal1.component.scss'],
+  selector: 'app-tab2-modal2',
+  templateUrl: './tab2-modal2.component.html',
+  styleUrls: ['./tab2-modal2.component.scss'],
 })
-export class Tab2Modal1Component implements OnInit {
+export class Tab2Modal2Component implements OnInit {
 
   @Input() modalId: string;
   @Input() firstName: string;
@@ -25,11 +25,11 @@ export class Tab2Modal1Component implements OnInit {
 
   async onPresent(): Promise<void> {
     const modal: Modal = await this.modalControllerService.create({
-      component: Tab2Modal2Component,
-      componentProps: { firstName: 'Alex2', lastName: 'Korenev2' },
-      showBackdrop: true,
+      component: Tab2Modal3Component,
+      componentProps: { firstName: 'Alex3', lastName: 'Korenev3' },
       swipeToClose: true,
-      heightPart: 0.2,
+      showBackdrop: true,
+      heightPart: 0.6,
     });
     modal.onWillPresent.then(event => console.log('onWillPresent', event));
     modal.onDidPresent.then(event => console.log('onDidPresent', event));
