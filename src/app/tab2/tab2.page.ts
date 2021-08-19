@@ -24,6 +24,7 @@ export class Tab2Page {
       heightPart: 0.3,
       swipeToExpand: true,
       clickBackdropToClose: false,
+      classes: 'aaaaaaaaaaaaaaaaaa',
     });
     modal.onWillPresent.then(event => console.log('onWillPresent', event));
     modal.onDidPresent.then(event => console.log('onDidPresent', event));
