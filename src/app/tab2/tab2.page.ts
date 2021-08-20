@@ -20,11 +20,11 @@ export class Tab2Page {
       component: Tab2Modal1Component,
       componentProps: { firstName: 'Alex2', lastName: 'Korenev2' },
       showBackdrop: true,
-      swipeToClose: false,
+      swipeToClose: true,
       heightPart: 0.3,
       swipeToExpand: true,
-      clickBackdropToClose: false,
-      classes: 'aaaaaaaaaaaaaaaaaa',
+      clickBackdropToClose: true,
+      classes: '',
     });
     modal.onWillPresent.then(event => console.log('onWillPresent', event));
     modal.onDidPresent.then(event => console.log('onDidPresent', event));
