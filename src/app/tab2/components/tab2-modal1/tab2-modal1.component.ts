@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Modal, ModalControllerService } from '../../../modal/services/modal-controller.service';
+import { Modal, ModalContent, ModalControllerService } from '../../../modal/services/modal-controller.service';
 import { Tab2Modal2Component } from '../tab2-modal2/tab2-modal2.component';
 
 @Component({
@@ -7,7 +7,7 @@ import { Tab2Modal2Component } from '../tab2-modal2/tab2-modal2.component';
   templateUrl: './tab2-modal1.component.html',
   styleUrls: ['./tab2-modal1.component.scss'],
 })
-export class Tab2Modal1Component implements OnInit {
+export class Tab2Modal1Component implements OnInit, ModalContent {
 
   @Input() modalId: string;
   @Input() firstName: string;

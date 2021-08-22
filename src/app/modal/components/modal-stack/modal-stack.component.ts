@@ -13,7 +13,7 @@ import { Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { ModalComponent } from '../modal/modal.component';
 import { ModalStreamService } from '../../services/modal-stream.service';
-import { Modal, ModalConfig, ModalEvent } from '../../services/modal-controller.service';
+import { Modal, ModalConfig, ModalContent, ModalEvent } from '../../services/modal-controller.service';
 
 @Component({
   selector: 'app-modal-stack',
@@ -47,9 +47,9 @@ export class ModalStackComponent implements OnInit, OnDestroy {
         this.changeDetectorRef.detectChanges();
         const modalContent = this.modalContents.last;
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
-        const componentRef: ComponentRef<{ modalId: string }> = modalContent.createComponent(componentFactory);
+        const componentRef: ComponentRef<ModalContent> = modalContent.createComponent(componentFactory);
         componentRef.instance.modalId = config.id;
-        componentRef.location.nativeElement.classList.add('modal-inner-component');
+        componentRef.location.nativeElement.classList.add('modal-content');
         if (config.componentProps) {
           const keys = Object.keys(config.componentProps);
           keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);

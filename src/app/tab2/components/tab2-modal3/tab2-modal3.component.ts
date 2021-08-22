@@ -1,12 +1,12 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ModalControllerService } from '../../../modal/services/modal-controller.service';
+import { ModalContent, ModalControllerService } from '../../../modal/services/modal-controller.service';
 
 @Component({
   selector: 'app-tab2-modal3',
   templateUrl: './tab2-modal3.component.html',
   styleUrls: ['./tab2-modal3.component.scss'],
 })
-export class Tab2Modal3Component implements OnInit {
+export class Tab2Modal3Component implements OnInit, ModalContent {
 
   @Input() modalId: string;
   @Input() firstName: string;

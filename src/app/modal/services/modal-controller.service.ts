@@ -3,7 +3,7 @@ import { filter, take, tap } from 'rxjs/operators';
 import { ModalStreamService } from './modal-stream.service';
 
 export interface ModalConfig {
-  component: Type<{ modalId: string }>;
+  component: Type<ModalContent>;
   componentProps: { [key: string]: any };
   swipeToClose: boolean;
   showBackdrop: boolean;
@@ -26,6 +26,10 @@ export interface ModalEvent<D = any> {
   id: string;
   data?: D;
   role?: string;
+}
+
+export interface ModalContent {
+  modalId: string;
 }
 
 @Injectable()
