@@ -88,13 +88,16 @@ export class ModalControllerService {
       .toPromise();
   }
 
-  public dismissAll(): Promise<void> {
-    return new Promise(resolve => {
-      this.modals.forEach(async modal => {
-        await this.dismiss(modal.id);
+  public dismissAll<D = any>(data?: D, role?: string): Promise<ModalEvent> {
+      const lastModalIndex = this.modals.length - 1;
+      const modalPromises = this.modals.map((modal: Modal, index: number) => {
+          if (index === lastModalIndex) {
+              return this.dismiss(modal.id, data, role);
+          } else {
+              return this.dismiss(modal.id);
+          }
       });
-      resolve();
-    });
+      return Promise.all(modalPromises).then(events => events[lastModalIndex]);
   }
 
   private isUndefined(id: string): boolean {

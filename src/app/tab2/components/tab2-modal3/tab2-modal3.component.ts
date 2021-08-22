@@ -23,7 +23,7 @@ export class Tab2Modal3Component implements OnInit, ModalContent {
   }
 
   onDismissAll(): void {
-    this.modalControllerService.dismissAll()
+    this.modalControllerService.dismissAll('success!!!')
       .then(event => console.log('dismissAll', event));
   }
 
