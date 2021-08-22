@@ -26,6 +26,9 @@
   }
 
   &__swipe-line {
+    position: absolute;
+    top: -20px;
+    left: 0;
     width: 100%;
     padding: 8px 16px;
 

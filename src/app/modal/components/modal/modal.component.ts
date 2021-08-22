@@ -59,10 +59,11 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
   }
 
   private setBreakpoints(): void {
-    const { height } = this.getScreenSize();
+    const screenSize = this.getScreenSize();
+    const swipeLineHeight = 20;
     this.breakpoints = {
-      full: height,
-      basic: Math.round(height * this.config.heightPart),
+      full: screenSize.height - swipeLineHeight,
+      basic: Math.round(screenSize.height * this.config.heightPart),
       closed: 0,
     };
   }
@@ -97,7 +98,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
         if (moveHeight < this.breakpoints.closed) {
           moveHeight = this.breakpoints.closed;
         }
-        direction = prevMoveHeight <= moveHeight ? 'up' : 'down';
+        direction = prevMoveHeight <= moveHeight && moveHeight !== 0 ? 'up' : 'down';
         prevMoveHeight = moveHeight;
         this.renderer2.setStyle(this.container, 'transition', 'none');
         this.renderer2.setStyle(this.container, 'height', `${moveHeight}px`);
