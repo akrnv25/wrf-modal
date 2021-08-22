@@ -49,6 +49,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
         const componentRef: ComponentRef<{ modalId: string }> = modalContent.createComponent(componentFactory);
         componentRef.instance.modalId = config.id;
+        componentRef.location.nativeElement.classList.add('ion-page');
         if (config.componentProps) {
           const keys = Object.keys(config.componentProps);
           keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
