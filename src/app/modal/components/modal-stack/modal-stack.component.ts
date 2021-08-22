@@ -12,8 +12,8 @@ import {
 import { Subject } from 'rxjs';
 import { filter, take, takeUntil, tap } from 'rxjs/operators';
 import { ModalComponent } from '../modal/modal.component';
-import { Modal, ModalConfig, ModalEvent } from '../../services/modal-controller.service';
 import { ModalStreamService } from '../../services/modal-stream.service';
+import { Modal, ModalConfig, ModalEvent } from '../../services/modal-controller.service';
 
 @Component({
   selector: 'app-modal-stack',
@@ -49,7 +49,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(config.component);
         const componentRef: ComponentRef<{ modalId: string }> = modalContent.createComponent(componentFactory);
         componentRef.instance.modalId = config.id;
-        componentRef.location.nativeElement.classList.add('ion-page');
+        componentRef.location.nativeElement.classList.add('modal-inner-component');
         if (config.componentProps) {
           const keys = Object.keys(config.componentProps);
           keys.forEach(key => componentRef.instance[key] = config.componentProps[key]);
@@ -59,7 +59,7 @@ export class ModalStackComponent implements OnInit, OnDestroy {
           onWillPresent: this.onWillPresent(config.id),
           onDidPresent: this.onDidPresent(config.id),
           onWillDismiss: this.onWillDismiss(config.id),
-          onDidDismiss: this.onDidDismiss(config.id)
+          onDidDismiss: this.onDidDismiss(config.id),
         };
         this.modalStreamService.created$.next(modal);
       });
