@@ -62,7 +62,7 @@ export class ModalComponent implements AfterViewInit, OnDestroy {
     const screenSize = this.getScreenSize();
     const swipeLineHeight = 20;
     this.breakpoints = {
-      full: screenSize.height - swipeLineHeight,
+      full: this.config.fullscreen ? screenSize.height : screenSize.height - swipeLineHeight,
       basic: Math.round(screenSize.height * this.config.heightPart),
       closed: 0,
     };

@@ -33,6 +33,7 @@ export class Tab2Modal2Component implements OnInit, ModalContent {
       swipeToExpand: true,
       clickBackdropToClose: true,
       classes: '',
+      fullscreen: false,
     });
     modal.onWillPresent.then(event => console.log('onWillPresent', event));
     modal.onDidPresent.then(event => console.log('onDidPresent', event));

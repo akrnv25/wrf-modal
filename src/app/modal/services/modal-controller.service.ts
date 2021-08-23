@@ -10,6 +10,7 @@ export interface ModalConfig {
   swipeToExpand: boolean;
   clickBackdropToClose: boolean;
   heightPart: number;
+  fullscreen: boolean;
   classes: string;
   id?: string;
 }

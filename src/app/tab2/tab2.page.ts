@@ -21,9 +21,10 @@ export class Tab2Page {
       componentProps: { firstName: 'Alex2', lastName: 'Korenev2' },
       showBackdrop: true,
       swipeToClose: true,
-      heightPart: 0.3,
+      heightPart: 1,
       swipeToExpand: true,
       clickBackdropToClose: true,
+      fullscreen: true,
       classes: '',
     });
     modal.onWillPresent.then(event => console.log('onWillPresent', event));
